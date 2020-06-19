@@ -1,4 +1,16 @@
-# Generated from ./Verilog2001.g4 by ANTLR 4.7.2
+# Generated from ./Verilog2001.g4 by ANTLR 4.8
+class Position:
+    def __init__(self, line, column):
+        self.column = column
+        self.line = line
+
+    def __gt__(self, other):
+        if(self.line>other.line):
+            return False
+        else:
+            return True
+
+
 from antlr4 import *
 if __name__ is not None and "." in __name__:
     from .Verilog2001Parser import Verilog2001Parser
@@ -7,6 +19,11 @@ else:
 
 # This class defines a complete listener for a parse tree produced by Verilog2001Parser.
 class Verilog2001Listener(ParseTreeListener):
+
+    def __init__(self, system, module_file_path):
+        self.system = system
+        self.module_file_path = module_file_path
+        super(Verilog2001Listener,self).__init__()
 
     # Enter a parse tree produced by Verilog2001Parser#config_declaration.
     def enterConfig_declaration(self, ctx:Verilog2001Parser.Config_declarationContext):
@@ -109,6 +126,68 @@ class Verilog2001Listener(ParseTreeListener):
 
     # Enter a parse tree produced by Verilog2001Parser#module_declaration.
     def enterModule_declaration(self, ctx:Verilog2001Parser.Module_declarationContext):
+        # Retrieve the following information:
+        #   * module identifier
+        #   * module parameters
+        #   * module ports (port definition may arrive after module declaration)
+
+        try:
+            module_name = ctx.module_identifier().identifier().start.text
+        except Exception:
+            print("[ERROR] failed to parse module declaration at line {} column {}".format(ctx.start.line, ctx.start.column))
+            return
+
+        #print("  starting at line {} and column {}".format(ctx.line, ctx.column))
+
+        parameter_list = ctx.module_parameter_port_list()
+
+        #print("Module declaration with identifier: {}".format(module_name))
+
+        if ctx.module_item():
+            items = ctx.module_item()
+            start = Position(items[len(items)-1].stop.line, 0xFFFFFFFF)
+        else:
+            items = ctx.non_port_module_item()
+            start = Position(items[len(items)-1].stop.line, 0xFFFFFFFF)
+
+        self.system.add_module(module_name, self.module_file_path, start)
+
+        if parameter_list:
+            i = 0
+            while parameter_list.parameter_declaration_(i):
+                parameter = parameter_list.parameter_declaration_(i).list_of_param_assignments().getText()
+                parameter = parameter.split("=")
+                parameter_name = parameter[0]
+                parameter_size = parameter[1]
+                #print("  parameter {} {}".format(parameter_name, parameter_size))
+                self.system.add_parameter(parameter_name, parameter_size)
+                i = i + 1
+
+        # Check if port are declared or defined
+        if ctx.list_of_port_declarations():
+
+            port_declarations = ctx.list_of_port_declarations()
+
+            port_list_pos = Position(port_declarations.start.line, port_declarations.start.column+1)
+            self.system.set_current_module_ports_list_position(port_list_pos)
+
+            i = 0
+            while port_declarations.port_declaration(i):
+                port_declaration = port_declarations.port_declaration(i)
+                #print("  port {} {}".format(port_declaration.start.text, port_declaration.stop.text))
+                i = i + 1
+        if ctx.list_of_ports():
+
+            ports = ctx.list_of_ports()
+
+            port_list_pos = Position(ports.start.line, ports.start.column+1)
+            self.system.set_current_module_ports_list_position(port_list_pos)
+
+            i = 0
+            while ports.port(i):
+                #print("  port {}".format(ports.port(i).getText()))
+                i = i + 1
+            #raise Error("unimplemented case")
         pass
 
     # Exit a parse tree produced by Verilog2001Parser#module_declaration.
@@ -289,7 +368,37 @@ class Verilog2001Listener(ParseTreeListener):
 
     # Enter a parse tree produced by Verilog2001Parser#output_declaration.
     def enterOutput_declaration(self, ctx:Verilog2001Parser.Output_declarationContext):
-        pass
+        for port in ctx.list_of_port_identifiers().port_identifier():
+            size = 1
+            rangeContext = ctx.range_()
+            if rangeContext != None:
+                # A parameter can be used to define the regsiter size
+                expr_msb = rangeContext.msb_constant_expression().constant_expression().expression().getText()
+                expr_lsb = rangeContext.lsb_constant_expression().constant_expression().expression().getText()
+
+                # lsb and msb may be an expression
+                expr = self.system.get_parameters_expression(self.system.get_last_module())
+
+                expr+= 'msb='+expr_msb
+                expr+='\n'
+                expr+= 'lsb='+expr_lsb
+
+                msb=0
+                lsb=0
+
+                context = {}
+                exec(expr, context)
+                msb = context['msb']
+                lsb = context['lsb']
+                if msb > lsb:
+                    size = msb
+                else:
+                    size = lsb
+                size = size + 1
+
+                self.system.add_register(port.getText(), size)
+            else:
+                self.system.add_register(port.getText(), 1)
 
     # Exit a parse tree produced by Verilog2001Parser#output_declaration.
     def exitOutput_declaration(self, ctx:Verilog2001Parser.Output_declarationContext):
@@ -352,7 +461,68 @@ class Verilog2001Listener(ParseTreeListener):
 
     # Enter a parse tree produced by Verilog2001Parser#reg_declaration.
     def enterReg_declaration(self, ctx:Verilog2001Parser.Reg_declarationContext):
-        pass
+        variable_identifiersContext = ctx.list_of_variable_identifiers()
+
+        if variable_identifiersContext == None:
+            return
+
+        for i in range(0, variable_identifiersContext.getChildCount()):
+            variable_typeContext = variable_identifiersContext.variable_type(i)
+            if variable_typeContext == None:
+                continue
+
+            dimension = 1
+
+            # retrieve diemension
+            for dimension in variable_typeContext.dimension():
+
+                arg1 = int(dimension.dimension_constant_expression(0).getText())
+                arg2 = int(dimension.dimension_constant_expression(1).getText())
+                dimention = 0
+                if arg1 > arg2:
+                    dimension = arg1-arg2
+                else:
+                    dimension = arg2-arg1
+                dimension = dimension + 1
+                #print("dimension from {} to {} |{}|".format(arg1, arg2, dimension))
+
+            variable_identifier = variable_typeContext.variable_identifier()
+
+            identifierContext = variable_identifier.identifier()
+
+            name = identifierContext.getText()
+
+            size = 1
+            rangeContext = ctx.range_()
+            if rangeContext != None:
+                # A parameter can be used to define the regsiter size
+                expr_msb = rangeContext.msb_constant_expression().constant_expression().expression().getText()
+                expr_lsb = rangeContext.lsb_constant_expression().constant_expression().expression().getText()
+
+                # lsb and msb may be an expression
+                expr = self.system.get_parameters_expression(self.system.get_last_module())
+
+                expr+= 'msb='+expr_msb
+                expr+='\n'
+                expr+= 'lsb='+expr_lsb
+
+                msb=0
+                lsb=0
+
+                context = {}
+                exec(expr, context)
+                msb = context['msb']
+                lsb = context['lsb']
+                if msb > lsb:
+                    size = msb
+                else:
+                    size = lsb
+                size = size + 1
+
+                self.system.add_register(name, size, dimension)
+            else:
+                self.system.add_register(name, 1, dimension)
+            #print("    register {} with size {} bits".format(name, size))
 
     # Exit a parse tree produced by Verilog2001Parser#reg_declaration.
     def exitReg_declaration(self, ctx:Verilog2001Parser.Reg_declarationContext):
@@ -1009,7 +1179,13 @@ class Verilog2001Listener(ParseTreeListener):
 
     # Enter a parse tree produced by Verilog2001Parser#module_instantiation.
     def enterModule_instantiation(self, ctx:Verilog2001Parser.Module_instantiationContext):
-        pass
+        submodule_name = ctx.module_identifier().identifier().start.text
+
+        for instance in ctx.module_instance():
+            line = instance.list_of_port_connections().start.line
+            column = instance.list_of_port_connections().start.column
+            #print("    submodule: {}".format(submodule_name))
+            self.system.add_submodule(submodule_name, Position(line, column))
 
     # Exit a parse tree produced by Verilog2001Parser#module_instantiation.
     def exitModule_instantiation(self, ctx:Verilog2001Parser.Module_instantiationContext):
@@ -1234,7 +1410,24 @@ class Verilog2001Listener(ParseTreeListener):
 
     # Enter a parse tree produced by Verilog2001Parser#nonblocking_assignment.
     def enterNonblocking_assignment(self, ctx:Verilog2001Parser.Nonblocking_assignmentContext):
-        pass
+        try:
+            lvaluectx = ctx.variable_lvalue();
+            hvictx = lvaluectx.hierarchical_variable_identifier();
+            if hvictx is None:
+                # we found a concatenation
+                concat = lvaluectx.variable_concatenation()
+                for el in concat.variable_concatenation_value():
+                    DFF_name = el.getText();
+                    self.system.add_flip_flop(DFF_name)
+            else:
+                hictx = hvictx.hierarchical_identifier();
+                shictx = hictx.simple_hierarchical_identifier();
+                shbctx = shictx.simple_hierarchical_branch();
+                DFF_name = shbctx.getText();
+                self.system.add_flip_flop(DFF_name)
+        except Exception as e:
+            print(e)
+
 
     # Exit a parse tree produced by Verilog2001Parser#nonblocking_assignment.
     def exitNonblocking_assignment(self, ctx:Verilog2001Parser.Nonblocking_assignmentContext):
@@ -1396,7 +1589,45 @@ class Verilog2001Listener(ParseTreeListener):
 
     # Enter a parse tree produced by Verilog2001Parser#procedural_timing_control_statement.
     def enterProcedural_timing_control_statement(self, ctx:Verilog2001Parser.Procedural_timing_control_statementContext):
-        pass
+        # check if event_control are synchronous
+
+
+        #print("adding procedural timing control statement from line {} to {}", start, end)
+        clk_expressions = ["clk", "clock", "aclk", "a_clk"]
+
+        try:
+            event_expression = ctx.delay_or_event_control().event_control().event_expression()
+            for i in range(0, len(event_expression.event_primary())):
+                event_primary_expr = event_expression.event_primary(i).expression().getText()
+                for clk_expr in clk_expressions:
+                    if clk_expr in event_primary_expr:
+                        if ctx.statement_or_null().statement().seq_block():
+                            # scan chain have to be inserted after the reset control sequence, so that reset arise first
+                            first_statement = ctx.statement_or_null().statement().seq_block().statement(0)
+                            if first_statement.conditional_statement() is not None:
+                                line_start = first_statement.conditional_statement().statement_or_null(1).start.line+1
+                                column_start = first_statement.conditional_statement().statement_or_null(1).start.column
+                            elif first_statement.if_else_if_statement() is not None:
+                                line_start = first_statement.if_else_if_statement().statement_or_null(0).start.line
+                                column_start = first_statement.if_else_if_statement().statement_or_null(0).start.column
+                            else:
+                                # in this case, the procedure has no reset
+                                line_start = first_statement.start.line
+                                column_start = first_statement.start.column
+                        else:
+                            line_start = ctx.statement_or_null().statement().start.line
+                            column_start = ctx.statement_or_null().statement().start.column
+
+                        line_end     = ctx.stop.line;
+                        column_end   = ctx.stop.column;
+
+                        start = Position(line_start, column_start)
+                        end   = Position(line_end, column_end)
+                        self.system.add_procedure(start, end)
+                        return
+        except Exception as e:
+            #print("[WARNING] Found procedural timing control statement that does not rely on a clock source at line {} column {} and text {}".format(ctx.start.line, ctx.start.column, ctx.getText()))
+            pass
 
     # Exit a parse tree produced by Verilog2001Parser#procedural_timing_control_statement.
     def exitProcedural_timing_control_statement(self, ctx:Verilog2001Parser.Procedural_timing_control_statementContext):
@@ -2602,7 +2833,11 @@ class Verilog2001Listener(ParseTreeListener):
 
     # Enter a parse tree produced by Verilog2001Parser#module_identifier.
     def enterModule_identifier(self, ctx:Verilog2001Parser.Module_identifierContext):
-        pass
+        id_ctx = ctx.identifier();
+        if id_ctx == None:
+            return
+        module_identifier = id_ctx.start.text;
+        #print("Module identifier = {}".format(module_identifier))
 
     # Exit a parse tree produced by Verilog2001Parser#module_identifier.
     def exitModule_identifier(self, ctx:Verilog2001Parser.Module_identifierContext):
@@ -2789,3 +3024,5 @@ class Verilog2001Listener(ParseTreeListener):
         pass
 
 
+
+del Verilog2001Parser
