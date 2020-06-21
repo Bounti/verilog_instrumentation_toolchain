@@ -3,12 +3,13 @@ class Position:
     def __init__(self, line, column):
         self.column = column
         self.line = line
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!! {} {} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!".format(line, column))
 
     def __gt__(self, other):
         if(self.line>other.line):
-            return False
-        else:
             return True
+        else:
+            return False
 
 
 from antlr4 import *
@@ -150,7 +151,13 @@ class Verilog2001Listener(ParseTreeListener):
             items = ctx.non_port_module_item()
             start = Position(items[len(items)-1].stop.line, 0xFFFFFFFF)
 
-        self.system.add_module(module_name, self.module_file_path, start)
+        if ctx.list_of_port_declarations() is not None:
+            named_port = True
+
+        if ctx.list_of_ports() is not None:
+            named_port = False
+
+        self.system.add_module(module_name, self.module_file_path, start, named_port)
 
         if parameter_list:
             i = 0
@@ -168,7 +175,7 @@ class Verilog2001Listener(ParseTreeListener):
 
             port_declarations = ctx.list_of_port_declarations()
 
-            port_list_pos = Position(port_declarations.start.line, port_declarations.start.column+1)
+            port_list_pos = Position(port_declarations.start.line-1, port_declarations.start.column+1)
             self.system.set_current_module_ports_list_position(port_list_pos)
 
             i = 0
@@ -180,8 +187,9 @@ class Verilog2001Listener(ParseTreeListener):
 
             ports = ctx.list_of_ports()
 
-            port_list_pos = Position(ports.start.line, ports.start.column+1)
+            port_list_pos = Position(ports.start.line-1, ports.start.column+1)
             self.system.set_current_module_ports_list_position(port_list_pos)
+            self.system.set_current_module_port_declaration(Position(ctx.module_item(0).start.line, ctx.module_item(0).start.column))
 
             i = 0
             while ports.port(i):
@@ -1180,12 +1188,23 @@ class Verilog2001Listener(ParseTreeListener):
     # Enter a parse tree produced by Verilog2001Parser#module_instantiation.
     def enterModule_instantiation(self, ctx:Verilog2001Parser.Module_instantiationContext):
         submodule_name = ctx.module_identifier().identifier().start.text
+        submodule = self.system.add_submodule(submodule_name)
 
         for instance in ctx.module_instance():
+
+            instance_name = instance.name_of_instance()
+            
             line = instance.list_of_port_connections().start.line
             column = instance.list_of_port_connections().start.column
-            #print("    submodule: {}".format(submodule_name))
-            self.system.add_submodule(submodule_name, Position(line, column))
+
+            if instance.list_of_port_connections().ordered_port_connection(0) is not None:
+                #print("!!!!!!!!!!!!!!!!!!!!!!!!!! {} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!".format(line))
+                #print("    submodule: {}".format(submodule_name))
+                self.system.add_submodule_instance(submodule, instance_name, Position(line, column), named_port=False)
+
+            if instance.list_of_port_connections().named_port_connection(0) is not None:
+                #print("    submodule: {}".format(submodule_name))
+                self.system.add_submodule_instance(submodule, instance_name, Position(line, column), named_port=True)
 
     # Exit a parse tree produced by Verilog2001Parser#module_instantiation.
     def exitModule_instantiation(self, ctx:Verilog2001Parser.Module_instantiationContext):
