@@ -391,7 +391,7 @@ class System:
             modifications.sort(key=getModKey,reverse=True)
 
             for modification in modifications:
-                print("at line {}".format(modification.position.line))
+                print("at line {} {}".format(modification.position.line, modification.position.column))
                 if self.verbose:
                     print(modification)
                     print("[INFO]  Inserting at position l:{} c:{} file:{}\n==========\n{}\n=========\n".format(modification.position.line,modification.position.column,module.get_source_file_path(),modification.payload))

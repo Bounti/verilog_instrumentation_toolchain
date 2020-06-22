@@ -8,6 +8,8 @@ class Position:
     def __gt__(self, other):
         if(self.line>other.line):
             return True
+        elif(self.line == other.line and other.line == 0xFFFFFFFF and self.line != 0xFFFFFFFF):
+            return True
         else:
             return False
 
@@ -1200,11 +1202,11 @@ class Verilog2001Listener(ParseTreeListener):
             if instance.list_of_port_connections().ordered_port_connection(0) is not None:
                 #print("!!!!!!!!!!!!!!!!!!!!!!!!!! {} !!!!!!!!!!!!!!!!!!!!!!!!!!!!!".format(line))
                 #print("    submodule: {}".format(submodule_name))
-                self.system.add_submodule_instance(submodule, instance_name, Position(line, column), named_port=False)
+                self.system.add_submodule_instance(submodule, instance_name, Position(line-1, column), named_port=False)
 
             if instance.list_of_port_connections().named_port_connection(0) is not None:
                 #print("    submodule: {}".format(submodule_name))
-                self.system.add_submodule_instance(submodule, instance_name, Position(line, column), named_port=True)
+                self.system.add_submodule_instance(submodule, instance_name, Position(line-1, column), named_port=True)
 
     # Exit a parse tree produced by Verilog2001Parser#module_instantiation.
     def exitModule_instantiation(self, ctx:Verilog2001Parser.Module_instantiationContext):
@@ -1624,17 +1626,17 @@ class Verilog2001Listener(ParseTreeListener):
                             # scan chain have to be inserted after the reset control sequence, so that reset arise first
                             first_statement = ctx.statement_or_null().statement().seq_block().statement(0)
                             if first_statement.conditional_statement() is not None:
-                                line_start = first_statement.conditional_statement().statement_or_null(1).start.line+1
+                                line_start = first_statement.conditional_statement().statement_or_null(1).start.line-1
                                 column_start = first_statement.conditional_statement().statement_or_null(1).start.column
                             elif first_statement.if_else_if_statement() is not None:
                                 line_start = first_statement.if_else_if_statement().statement_or_null(0).start.line
                                 column_start = first_statement.if_else_if_statement().statement_or_null(0).start.column
                             else:
                                 # in this case, the procedure has no reset
-                                line_start = first_statement.start.line
+                                line_start = first_statement.start.line-1
                                 column_start = first_statement.start.column
                         else:
-                            line_start = ctx.statement_or_null().statement().start.line
+                            line_start = ctx.statement_or_null().statement().start.line-1
                             column_start = ctx.statement_or_null().statement().start.column
 
                         line_end     = ctx.stop.line;
