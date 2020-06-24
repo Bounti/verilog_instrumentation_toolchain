@@ -15,6 +15,8 @@ import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
 from shutil import copyfile
+import shutil
+import glob
 
 import fileinput
 from tqdm import tqdm
@@ -445,47 +447,85 @@ class System:
         
         self.modules[-1].port_decl_pos = position
 
+def create_or_clean_directory(dir):
+	"""
+	This method attempts to create the specified directory. However, if it
+	already exists then it will be cleaned to ensure there are no stale files.
+	"""
+	if not os.path.exists(dir):
+		print("The path \"" + dir + "\" does not exist")
+		print("creating directory \"" + dir + "\"")
+		os.makedirs(dir)
+	else: #Directory exists, but we want to clean it before use
+		print(dir + " already exists. Cleaning before use...")
+		shutil.rmtree(dir)
+		os.makedirs(dir)
+
 def main(argv):
 
     parser = argparse.ArgumentParser()
-
-    parser.add_argument('--input_dir', '-i', action='store', required=True,
+  
+    parser.add_argument('--mode', "-m", dest='mode', choices=["instrument","make"],
+            action='store', required=True, help='.')
+    parser.add_argument('--input_dir', '-i', action='store', required=False,
                         help='Inform the input directory.')
     parser.add_argument('--output_dir', '-o', action='store', required=True,
                         help='Inform the output directory.')
 
     args = parser.parse_args()
 
-    files_to_analyze = []
-    for root, dirs, files in os.walk(args.input_dir):
-        for f in files:
-            if f.endswith(".v"):
-                files_to_analyze.append(os.path.join(root, f))
+    if args.mode == "instrument":
 
-    system = System(args.input_dir, args.output_dir)
+        if args.input_dir is None:
+            parser.error("--instrument requires input_dir.")
 
-    for i in tqdm(range(len(files_to_analyze))):
-    #for file in files_to_analyze:
-        input = FileStream(files_to_analyze[i])
-        #input = FileStream(file)
+        files_to_analyze = []
+        for root, dirs, files in os.walk(args.input_dir):
+            for f in files:
+                if f.endswith(".v"):
+                    files_to_analyze.append(os.path.join(root, f))
 
-        print("\n\n\n\n\n[INFO] Analyzing {}".format(files_to_analyze[i]))
+        system = System(args.input_dir, args.output_dir)
 
-        lexer = Verilog2001Lexer(input)
+        create_or_clean_directory(args.output_dir) 
 
-        stream = CommonTokenStream(lexer)
+        for i in tqdm(range(len(files_to_analyze))):
+        #for file in files_to_analyze:
+            input = FileStream(files_to_analyze[i])
+            #input = FileStream(file)
 
-        parser = Verilog2001Parser(stream)
+            print("\n\n\n\n\n[INFO] Analyzing {}".format(files_to_analyze[i]))
 
-        listener = Verilog2001Listener(system, files_to_analyze[i])
+            lexer = Verilog2001Lexer(input)
 
-        tree = parser.source_text()
+            stream = CommonTokenStream(lexer)
 
-        walker = ParseTreeWalker()
+            parser = Verilog2001Parser(stream)
 
-        walker.walk(listener, tree)
+            listener = Verilog2001Listener(system, files_to_analyze[i])
 
-    system.add_scan_chain()
+            tree = parser.source_text()
+
+            walker = ParseTreeWalker()
+
+            walker.walk(listener, tree)
+
+        system.add_scan_chain()
+
+    if args.mode == "make":
+        print("make dir")
+ 
+        create_or_clean_directory(args.output_dir+"/sim") 
+        create_or_clean_directory(args.output_dir+"/tb") 
+        create_or_clean_directory(args.output_dir+"/sw") 
+
+        dirs = ["sim", "sw", "tb", "rtl"]
+
+        for c_dir in dirs:
+            for file in glob.glob(r'./template/'+c_dir+'/*'):
+                shutil.copy(file, args.output_dir+c_dir)
+
+    #system.draw_mdg()
 
 if __name__ == '__main__':
     main(sys.argv)
