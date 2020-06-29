@@ -7,9 +7,9 @@ echo "Version: 0.1"
 echo "Name:    HardSnap"
 echo "===================="
 
-#mkdir build
+mkdir build
 
-#vivado -nojournal -nolog -mode tcl -source ./vvsyn.tcl -tclargs $(pwd) $(pwd)/build/
+vivado -nojournal -nolog -mode tcl -source ./vvsyn.tcl -tclargs $(pwd) $(pwd)/build/
 
 FILE=$(pwd)/build/top.runs/impl_1/top_wrapper.sysdef
 if test -f "$FILE"; then
