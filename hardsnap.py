@@ -145,6 +145,7 @@ class Module(Editable):
 
         last_ff = None
         last_ff_name = "scan_output"
+        first_ff = True
 
 	# For each procedure in module
         for i in range(0, len(self.procedures)):
@@ -226,6 +227,15 @@ class Module(Editable):
 
                 no_ff_in_scan_chain += 1
 
+            if first_ff == True:
+                first_ff = False
+                first_line = sc_str.split("\n")[0]
+                
+                assign_str = "assign scan_output = "+first_line.split(" ")[2]+";\n"
+                modifications.append(Modification(self.start, assign_str))
+
+                sc_str = "\n".join(sc_str.split("\n")[1:])
+
             mux += sc_str
             mux += "            end \n" + "        end \n" +"    else \n"
             modifications.append(Modification(start_pos, mux))
@@ -233,10 +243,10 @@ class Module(Editable):
         # Add scan chain signals
         if not self.named_port:
             sc_str = "scan_input, scan_output, scan_ck_enable, scan_enable, "
-        elif self.scan_chain_size == 0:
-            sc_str = "input wire scan_input, output wire scan_output, input wire scan_ck_enable, input wire scan_enable, "
+        #elif self.scan_chain_size == 0:
+        #    sc_str = "input wire scan_input, output wire scan_output, input wire scan_ck_enable, input wire scan_enable, "
         else:
-            sc_str = "input wire scan_input, output reg scan_output, input wire scan_ck_enable, input wire scan_enable, "
+            sc_str = "input wire scan_input, output wire scan_output, input wire scan_ck_enable, input wire scan_enable, "
 
         modifications.append(Modification(self.port_list_pos,sc_str))
 
