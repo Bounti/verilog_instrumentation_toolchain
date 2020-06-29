@@ -533,6 +533,9 @@ def main(argv):
 
         dirs = ["sim", "sw", "tb", "rtl", "tcl", "c"]
 
+        if args.output_dir[-1] != '/':
+            args.output_dir += '/'
+
         for c_dir in dirs:
             for file in glob.glob(r'./template/'+c_dir+'/*'):
                 shutil.copy(file, args.output_dir+c_dir)
