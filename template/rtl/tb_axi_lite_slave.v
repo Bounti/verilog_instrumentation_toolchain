@@ -143,8 +143,8 @@ module top(
   wire scan_output_t1;
   wire scan_input_t1;
 
-  wire scan_outputt0;
-  wire scan_inputt0;
+  wire scan_output_t0;
+  wire scan_input_t0;
 
   wire scan_output_pic;
   wire scan_input_pic;
@@ -154,26 +154,26 @@ module top(
     case ( target_selector )
 
       2'b00: begin
-          write_addrt0       = write_addr;
-          write_prott0       = write_prot;
-          write_addr_validt0 = write_addr_valid;
-          write_datat0       = write_data;
-          write_strbt0       = write_strb;
-          write_data_validt0 = write_data_valid;
-          write_data_readyt0 = write_data_ready;
-          write_resp_readyt0 = write_resp_ready;
-          read_addrt0        = read_addr;
-          read_prott0        = read_prot;
-          read_addr_validt0  = read_addr_valid;
-          read_data_readyt0  = read_data_ready;	
+          write_addr_t0       = write_addr;
+          write_prot_t0       = write_prot;
+          write_addr_valid_t0 = write_addr_valid;
+          write_data_t0       = write_data;
+          write_strb_t0       = write_strb;
+          write_data_valid_t0 = write_data_valid;
+          write_data_ready_t0 = write_data_ready;
+          write_resp_ready_t0 = write_resp_ready;
+          read_addr_t0        = read_addr;
+          read_prot_t0        = read_prot;
+          read_addr_valid_t0  = read_addr_valid;
+          read_data_ready_t0  = read_data_ready;	
 
-          write_resp_reg       = write_respt0      ; // output
-          write_resp_valid_reg = write_resp_validt0; // output  
-          read_addr_ready_reg  = read_addr_readyt0 ; // output 
-          write_addr_ready_reg = write_addr_readyt0; // output
-          read_data_reg        = read_datat0       ; // output
-          read_resp_reg        = read_respt0       ; // output 
-          read_data_valid_reg  = read_data_validt0 ; // output      
+          write_resp_reg       = write_resp_t0      ; // output
+          write_resp_valid_reg = write_resp_valid_t0; // output  
+          read_addr_ready_reg  = read_addr_ready_t0 ; // output 
+          write_addr_ready_reg = write_addr_ready_t0; // output
+          read_data_reg        = read_data_t0       ; // output
+          read_resp_reg        = read_resp_t0       ; // output 
+          read_data_valid_reg  = read_data_valid_t0 ; // output      
         end
 
       2'b01: begin
@@ -200,6 +200,7 @@ module top(
       end
      
       2'b10: begin
+      /*
           write_addr_pic       = write_addr;
           write_prot_pic       = write_prot;
           write_addr_valid_pic = write_addr_valid;
@@ -220,8 +221,8 @@ module top(
           read_data_reg        = read_data_pic       ; // output
           read_resp_reg        = read_resp_pic       ; // output 
           read_data_valid_reg  = read_data_valid_pic ; // output 
+      */
       end
-
       2'b11: begin
       end
 
@@ -242,10 +243,10 @@ module top(
         .C_S00_AXI_ADDR_WIDTH(32)
     ) aes_ctr_inst (
 
-        .scan_input(scan_outputt0),
-        .scan_output(scan_output),
+        .scan_input(scan_input),
+        .scan_output(scan_output_t0),
         .scan_enable(scan_enable),
-        .scan_ck_en(scan_ck_en),
+        .scan_ck_enable(scan_ck_en),
 
         .s00_axi_aclk(clk_i),
         .s00_axi_aresetn(rst_ni),
@@ -285,45 +286,46 @@ module top(
         .s00_axi_aclk(clk_i),
         .s00_axi_aresetn(rst_ni),
 
-        .scan_input(scan_output_pic),
-        .scan_output(scan_outputt0),
+        .scan_input(scan_output_t0),
+        .scan_output(scan_output_t1),
         .scan_enable(scan_enable),
         .scan_ck_enable(scan_ck_en),
 
-        .s00_axi_awaddr(write_addrt0),
-        .s00_axi_awprot(write_prott0),
-        .s00_axi_awvalid(write_addr_validt0),
-        .s00_axi_awready(write_addr_readyt0),
+        .s00_axi_awaddr(write_addr_t0),
+        .s00_axi_awprot(write_prot_t0),
+        .s00_axi_awvalid(write_addr_valid_t0),
+        .s00_axi_awready(write_addr_ready_t0),
 
-        .s00_axi_wdata(write_datat0),
-        .s00_axi_wstrb(write_strbt0),
-        .s00_axi_wvalid(write_data_validt0),
-        .s00_axi_wready(write_data_readyt0),
+        .s00_axi_wdata(write_data_t0),
+        .s00_axi_wstrb(write_strb_t0),
+        .s00_axi_wvalid(write_data_valid_t0),
+        .s00_axi_wready(write_data_ready_t0),
 
-        .s00_axi_bresp(write_respt0),
-        .s00_axi_bvalid(write_resp_validt0),
-        .s00_axi_bready(write_resp_readyt0),
+        .s00_axi_bresp(write_resp_t0),
+        .s00_axi_bvalid(write_resp_valid_t0),
+        .s00_axi_bready(write_resp_ready_t0),
 
-        .s00_axi_araddr(read_addrt0),
-        .s00_axi_arprot(read_prott0),
-        .s00_axi_arvalid(read_addr_validt0),
-        .s00_axi_arready(read_addr_readyt0),
+        .s00_axi_araddr(read_addr_t0),
+        .s00_axi_arprot(read_prot_t0),
+        .s00_axi_arvalid(read_addr_valid_t0),
+        .s00_axi_arready(read_addr_ready_t0),
 
-        .s00_axi_rdata(read_datat0),
-        .s00_axi_rresp(read_respt0),
-        .s00_axi_rvalid(read_data_validt0),
-        .s00_axi_rready(read_data_readyt0),
+        .s00_axi_rdata(read_data_t0),
+        .s00_axi_rresp(read_resp_t0),
+        .s00_axi_rvalid(read_data_valid_t0),
+        .s00_axi_rready(read_data_ready_t0),
 
         .interrupt(t0_interrupt)
       );
 
 
+/*
 	pic # ( 
 		.C_S00_AXI_DATA_WIDTH(32),
 		.C_S00_AXI_ADDR_WIDTH(32)
 	) pic_inst (
 
-    .scan_input(scan_input),
+    .scan_input(scan_output_t1),
     .scan_output(scan_output_pic),
     .scan_enable(scan_enable),
     .scan_ck_en(scan_ck_en),
@@ -361,6 +363,6 @@ module top(
    .s00_axi_rvalid (read_data_valid_pic),
    .s00_axi_rready (read_data_ready_pic)
 	);
-
+*/
 
 endmodule

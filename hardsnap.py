@@ -111,7 +111,7 @@ class Module(Editable):
         DFF_name = re.sub("\\[\\d+\\]", "", DFF_name)
 
         if len(self.procedures) == 0:
-            print("Unable to add flip_flop {} since no synchronous procedure has been found so far.".format(DFF_name))
+            #print("Unable to add flip_flop {} since no synchronous procedure has been found so far.".format(DFF_name))
             return
 
         # DFF_name is already present
@@ -393,7 +393,7 @@ class System:
             modifications.sort(key=getModKey,reverse=True)
 
             for modification in modifications:
-                print("at line {} {}".format(modification.position.line, modification.position.column))
+                #print("at line {} {}".format(modification.position.line, modification.position.column))
                 if self.verbose:
                     print(modification)
                     print("[INFO]  Inserting at position l:{} c:{} file:{}\n==========\n{}\n=========\n".format(modification.position.line,modification.position.column,module.get_source_file_path(),modification.payload))
@@ -514,12 +514,14 @@ def main(argv):
 
     if args.mode == "make":
         print("make dir")
- 
-        create_or_clean_directory(args.output_dir+"/sim") 
-        create_or_clean_directory(args.output_dir+"/tb") 
-        create_or_clean_directory(args.output_dir+"/sw") 
 
-        dirs = ["sim", "sw", "tb", "rtl"]
+        create_or_clean_directory(args.output_dir+"/sim")
+        create_or_clean_directory(args.output_dir+"/tb")
+        create_or_clean_directory(args.output_dir+"/sw")
+        create_or_clean_directory(args.output_dir+"/c")
+        create_or_clean_directory(args.output_dir+"/tcl")
+
+        dirs = ["sim", "sw", "tb", "rtl", "tcl", "c"]
 
         for c_dir in dirs:
             for file in glob.glob(r'./template/'+c_dir+'/*'):
