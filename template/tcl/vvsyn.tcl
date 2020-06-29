@@ -126,6 +126,6 @@ puts "  resource utilization report in $rundir/${top}_wrapper_utilization_placed
 puts "  timing report in $rundir/${top}_wrapper_timing_summary_routed.rpt"
 
 
-file mkdir $rundir/top.sdk
-file copy -force $rundir/top.runs/impl_1/top_wrapper.sysdef $rundir/top.sdk/top_wrapper.hdf
+file mkdir $builddir/top.sdk
+file copy -force $rundir/top_wrapper.sysdef $builddir/top.sdk/top_wrapper.hdf
 
