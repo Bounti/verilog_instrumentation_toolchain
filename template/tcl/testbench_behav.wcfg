@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="testbench_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="axi_vip_pkg" />
+            <top_module name="glbl" />
+            <top_module name="std" />
+            <top_module name="testbench" />
+            <top_module name="xil_common_vip_pkg" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="9166666666fs"></ZoomStartTime>
+      <ZoomEndTime time="10166666667fs"></ZoomEndTime>
+      <Cursor1Time time="9867647000fs"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="251"></NameColumnWidth>
+      <ValueColumnWidth column_width="282"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="18" />
+   <wvobject type="logic" fp_name="/testbench/aclk">
+      <obj_property name="ElementShortName">aclk</obj_property>
+      <obj_property name="ObjectShortName">aclk</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/testbench/aresetn">
+      <obj_property name="ElementShortName">aresetn</obj_property>
+      <obj_property name="ObjectShortName">aresetn</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/testbench/prot">
+      <obj_property name="ElementShortName">prot[2:0]</obj_property>
+      <obj_property name="ObjectShortName">prot[2:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/testbench/resp">
+      <obj_property name="ElementShortName">resp[1:0]</obj_property>
+      <obj_property name="ObjectShortName">resp[1:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/testbench/SCANIP_START">
+      <obj_property name="ElementShortName">SCANIP_START[31:0]</obj_property>
+      <obj_property name="ObjectShortName">SCANIP_START[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/testbench/REG_SNP1_ADDR">
+      <obj_property name="ElementShortName">REG_SNP1_ADDR[31:0]</obj_property>
+      <obj_property name="ObjectShortName">REG_SNP1_ADDR[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/testbench/REG_SNP2_ADDR">
+      <obj_property name="ElementShortName">REG_SNP2_ADDR[31:0]</obj_property>
+      <obj_property name="ObjectShortName">REG_SNP2_ADDR[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/testbench/REG_LENGTH">
+      <obj_property name="ElementShortName">REG_LENGTH[31:0]</obj_property>
+      <obj_property name="ObjectShortName">REG_LENGTH[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/testbench/REG_START_ADDR">
+      <obj_property name="ElementShortName">REG_START_ADDR[31:0]</obj_property>
+      <obj_property name="ObjectShortName">REG_START_ADDR[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/testbench/REG_STATUS">
+      <obj_property name="ElementShortName">REG_STATUS[31:0]</obj_property>
+      <obj_property name="ObjectShortName">REG_STATUS[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/testbench/SHA_START">
+      <obj_property name="ElementShortName">SHA_START[31:0]</obj_property>
+      <obj_property name="ObjectShortName">SHA_START[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/testbench/DUT/top_i/t0/inst/sha256_v1_0_S00_AXI_inst/core/digest">
+      <obj_property name="ElementShortName">digest[255:0]</obj_property>
+      <obj_property name="ObjectShortName">digest[255:0]</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/testbench/DUT/top_i/t0/inst/sha256_v1_0_S00_AXI_inst/core/digest_valid">
+      <obj_property name="ElementShortName">digest_valid</obj_property>
+      <obj_property name="ObjectShortName">digest_valid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/testbench/DUT/top_i/scanner_ip/scan_output">
+      <obj_property name="ElementShortName">scan_output</obj_property>
+      <obj_property name="ObjectShortName">scan_output</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/testbench/DUT/top_i/scanner_ip/scan_ck_enable">
+      <obj_property name="ElementShortName">scan_ck_enable</obj_property>
+      <obj_property name="ObjectShortName">scan_ck_enable</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/testbench/DUT/top_i/scanner_ip/scan_input">
+      <obj_property name="ElementShortName">scan_input</obj_property>
+      <obj_property name="ObjectShortName">scan_input</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/testbench/DUT/top_i/scanner_ip/scan_enable">
+      <obj_property name="ElementShortName">scan_enable</obj_property>
+      <obj_property name="ObjectShortName">scan_enable</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/testbench/DUT/top_i/t0/inst/sha256_v1_0_S00_AXI_inst/core/digest_valid">
+      <obj_property name="ElementShortName">digest_valid</obj_property>
+      <obj_property name="ObjectShortName">digest_valid</obj_property>
+   </wvobject>
+</wave_config>
