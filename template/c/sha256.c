@@ -17,7 +17,7 @@ This code is based on public domain code from Wei Dai's Crypto++ library. */
 #define _SHA256_UNROLL
 #define _SHA256_UNROLL2
 
-volatile unsigned int* sha256_reg = (volatile unsigned int*) 0x43c00000;
+volatile unsigned int* sha256_reg = (volatile unsigned int*) 0x60000000;
 
 //----------------------------------------------------------------
 // wait_ready()

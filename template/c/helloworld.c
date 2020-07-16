@@ -115,8 +115,8 @@ unsigned create_hw_snapshot(unsigned to, unsigned size) {
     SCAN_BASE[3] = 1;
     SCAN_BASE[3] = 0;
 
-    poll_scan_irq();
-    ack_irq();
+    //poll_scan_irq();
+    //ack_irq();
     while(SCAN_BASE[4] == 0) {
     	asm("nop");
     }
@@ -128,8 +128,8 @@ unsigned create_hw_snapshot(unsigned to, unsigned size) {
     SCAN_BASE[3] = 1;
     SCAN_BASE[3] = 0;
 
-    poll_scan_irq();
-    ack_irq();
+    //poll_scan_irq();
+    //ack_irq();
     while(SCAN_BASE[4] == 0) {
     	asm("nop");
     }
@@ -145,8 +145,8 @@ void load_hw_snapshot(unsigned from, unsigned to, unsigned size) {
     SCAN_BASE[3] = 1;
     SCAN_BASE[3] = 0;
 
-    poll_scan_irq();
-    ack_irq();
+    //poll_scan_irq();
+    //ack_irq();
     while(SCAN_BASE[4] == 0) {
     	asm("nop");
     }
@@ -182,7 +182,7 @@ int main()
     test_sha256(0);
 
     // Save hw snapshot at 0x10000000 with size 1088
-    unsigned snp1 = create_hw_snapshot(0x10000000, 1088);
+    unsigned snp1 = create_hw_snapshot(0x10000000, 1039);
 
     // Read digest and check that it is as expected : snp1_hash
     read_digest(hash);
@@ -196,7 +196,7 @@ int main()
 
     // Reload snapshot 1
     unsigned int snp2 = 0x10008000;
-    load_hw_snapshot(snp1, snp2, 1088);
+    load_hw_snapshot(snp1, snp2, 1039);
 
     // SNapshot 1 has been reloaded, so expected result is snp1_hash and not snp2_hash
     // Read digest and check that it is as expected : snp1_hash
