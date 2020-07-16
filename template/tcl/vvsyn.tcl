@@ -38,7 +38,7 @@ close_project
 # Create Fast IP Scanner 
 ###################
 create_project -part xc7z020clg484-1 -force scanner scanner_ip
-set sources [glob -directory ../../../../hardsnap_ip/scan_ip/ *.*v]
+set sources [glob -directory ../../../../hardsnap_ip/scan_ip/hdl/ *.*v]
 foreach f $sources {
         add_files $builddir$f
 }
@@ -56,6 +56,8 @@ create_bd_design "$top"
 create_bd_cell -type ip -vlnv www.eurecom.fr:ip:scanner:1.0 fast_ip_scanner_0
 create_bd_cell -type ip -vlnv www.eurecom.fr:ip:sha256:1.0 sha256_0
 create_bd_cell -type ip -vlnv xilinx.com:ip:processing_system7:5.5 processing_system7_0
+create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_generator_t0
+create_bd_cell -type ip -vlnv xilinx.com:ip:fifo_generator:13.2 fifo_generator_t1
 
 apply_bd_automation -rule xilinx.com:bd_rule:processing_system7 -config {make_external "FIXED_IO, DDR" apply_board_preset "1" Master "Disable" Slave "Disable" }  [get_bd_cells processing_system7_0]
 
@@ -64,15 +66,35 @@ set_property -dict [list CONFIG.PCW_QSPI_GRP_SINGLE_SS_ENABLE {1} CONFIG.PCW_UAR
 set_property -dict [list CONFIG.PCW_USE_S_AXI_HP0 {1} CONFIG.PCW_QSPI_GRP_SINGLE_SS_ENABLE {1}] [get_bd_cells processing_system7_0]
 set_property -dict [list CONFIG.PCW_USE_S_AXI_HP0 {1}] [get_bd_cells processing_system7_0]
 
+set_property -dict [list CONFIG.Input_Data_Width {32} CONFIG.Output_Data_Width {32} CONFIG.Reset_Pin {false} CONFIG.Reset_Type {Asynchronous_Reset} CONFIG.Use_Dout_Reset {false} CONFIG.Almost_Full_Flag {true}] [get_bd_cells fifo_generator_t0]
+set_property -dict [list CONFIG.Input_Data_Width {32} CONFIG.Output_Data_Width {32} CONFIG.Reset_Pin {false} CONFIG.Reset_Type {Asynchronous_Reset} CONFIG.Use_Dout_Reset {false} CONFIG.Almost_Full_Flag {true}] [get_bd_cells fifo_generator_t1]
+
 connect_bd_net [get_bd_pins sha256_0/scan_output] [get_bd_pins fast_ip_scanner_0/scan_output]
 connect_bd_net [get_bd_pins fast_ip_scanner_0/scan_input] [get_bd_pins sha256_0/scan_input]
 
-connect_bd_net [get_bd_pins fast_ip_scanner_0/scan_ck_en] [get_bd_pins sha256_0/scan_ck_enable]
+connect_bd_net [get_bd_pins fast_ip_scanner_0/scan_ck_enable] [get_bd_pins sha256_0/scan_ck_enable]
 connect_bd_net [get_bd_pins fast_ip_scanner_0/scan_enable] [get_bd_pins sha256_0/scan_enable]
+
+connect_bd_net [get_bd_pins fifo_generator_t0/almost_full] [get_bd_pins fast_ip_scanner_0/almost_full_t0]
+connect_bd_net [get_bd_pins fifo_generator_t0/din] [get_bd_pins fast_ip_scanner_0/data_in_t0]
+connect_bd_net [get_bd_pins fifo_generator_t0/wr_en] [get_bd_pins fast_ip_scanner_0/wr_en_t0]
+connect_bd_net [get_bd_pins fifo_generator_t0/empty] [get_bd_pins fast_ip_scanner_0/empty_t0]
+connect_bd_net [get_bd_pins fifo_generator_t0/rd_en] [get_bd_pins fast_ip_scanner_0/rd_en_t0]
+connect_bd_net [get_bd_pins fifo_generator_t0/dout] [get_bd_pins fast_ip_scanner_0/data_out_t0]
+
+connect_bd_net [get_bd_pins fifo_generator_t1/almost_full] [get_bd_pins fast_ip_scanner_0/almost_full_t1]
+connect_bd_net [get_bd_pins fifo_generator_t1/din] [get_bd_pins fast_ip_scanner_0/data_in_t1]
+connect_bd_net [get_bd_pins fifo_generator_t1/wr_en] [get_bd_pins fast_ip_scanner_0/wr_en_t1]
+connect_bd_net [get_bd_pins fifo_generator_t1/empty] [get_bd_pins fast_ip_scanner_0/empty_t1]
+connect_bd_net [get_bd_pins fifo_generator_t1/rd_en] [get_bd_pins fast_ip_scanner_0/rd_en_t1]
+connect_bd_net [get_bd_pins fifo_generator_t1/dout] [get_bd_pins fast_ip_scanner_0/data_out_t1]
 
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/processing_system7_0/M_AXI_GP0} Slave {/fast_ip_scanner_0/s00_axi} intc_ip {New AXI Interconnect} master_apm {0}}  [get_bd_intf_pins fast_ip_scanner_0/s00_axi]
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/processing_system7_0/M_AXI_GP0} Slave {/sha256_0/s00_axi} intc_ip {New AXI Interconnect} master_apm {0}}  [get_bd_intf_pins sha256_0/s00_axi]
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {Auto} Clk_slave {Auto} Clk_xbar {Auto} Master {/fast_ip_scanner_0/m00_axi} Slave {/processing_system7_0/S_AXI_HP0} intc_ip {Auto} master_apm {0}}  [get_bd_intf_pins processing_system7_0/S_AXI_HP0]
+
+apply_bd_automation -rule xilinx.com:bd_rule:clkrst -config {Clk "/processing_system7_0/FCLK_CLK0 (100 MHz)" }  [get_bd_pins fifo_generator_t0/clk]
+apply_bd_automation -rule xilinx.com:bd_rule:clkrst -config {Clk "/processing_system7_0/FCLK_CLK0 (100 MHz)" }  [get_bd_pins fifo_generator_t1/clk]
 
 # Synthesis flow
 validate_bd_design
